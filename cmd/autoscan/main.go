@@ -43,6 +43,7 @@ type config struct {
 	Port       int           `yaml:"port"`
 	MinimumAge time.Duration `yaml:"minimum-age"`
 	ScanDelay  time.Duration `yaml:"scan-delay"`
+	ScanInitDelay time.Duration `yaml:"scan-init-delay"` // New ScanInitDelay parameter
 	ScanStats  time.Duration `yaml:"scan-stats"`
 	Anchors    []string      `yaml:"anchors"`
 
@@ -174,6 +175,7 @@ func main() {
 	c := config{
 		MinimumAge: 10 * time.Minute,
 		ScanDelay:  5 * time.Second,
+		ScanInitDelay: 10 * time.Second,  // set default ScanInitDelay to 10 seconds
 		ScanStats:  1 * time.Hour,
 		Host:       []string{""},
 		Port:       3030,
@@ -358,7 +360,11 @@ func main() {
 			log.Warn().Msg("No targets initialised, processor stopped, triggers will continue...")
 			select {}
 		}
-
+		
+		// add initial delay before starting the scan
+		log.Info().Msgf("Initial delay of %s before starting the scan...", c.ScanInitDelay)
+		time.Sleep(c.ScanInitDelay)
+		
 		// target availability checker
 		if !targetsAvailable {
 			err = proc.CheckAvailability(targets)
